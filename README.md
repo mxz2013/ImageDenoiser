@@ -2,7 +2,7 @@
 
 PyTorch implementation of the Enhance Lab image denoising assessment. The
 project reconstructs the provided convolutional denoising network from
-`architecture.jpg` / `model_architecture.png`, converts flattened CSV weights
+`architecture.jpg` and `weights.csv`, converts flattened CSV weights
 into a PyTorch checkpoint, runs inference on noisy RGB images, and evaluates the
 results with PSNR and SSIM.
 
@@ -18,12 +18,17 @@ results with PSNR and SSIM.
 │   └── evaluation/         # PSNR/SSIM metrics and plotting
 ├── tests/                  # Pytest regression test for inference
 ├── main_inference.py       # Inference CLI
+├── llm_logs/
+│   ├── codex_log.md        # Conversation log with Codex
+│   └── cc_log.md           # Conversation log with Claude Code
 ├── architecture.jpg        # Original network diagram
 ├── model_architecture.png  # Interpreted architecture diagram
-└── pyproject.toml
+├── performance_check.png   # Denoising example image
+├── prompt.md               # Initial prompt for Codex
+└── pyproject.toml          # Project configuration file
 ```
 
-Generated files are intentionally ignored:
+Files that are intentionally ignored in github:
 
 - `weights.csv`: large assessment-provided weight file.
 - `checkpoint.pt`: converted PyTorch checkpoint created from `weights.csv`.
@@ -116,6 +121,10 @@ metrics:
 | PSNR | 28.2345 | 32.8445 | +4.6099 dB |
 | SSIM | 0.5397 | 0.8146 | +0.2749 |
 
+## Denoise Examples
+
+![Denoising performance comparison](performance_check.png)
+
 ## Tests
 
 Run the regression test:
@@ -134,3 +143,12 @@ input.
 - Convolution layers do not use bias terms, matching the assessment materials.
 - The implementation keeps PyTorch parameter names aligned with `weights.csv`
   so checkpoint conversion can validate the architecture strictly.
+
+## My workflow
+- Read carefully `CandidateInstructions.md` to understand objectives.
+- Data analysis on `weights.csv` together with `architecture.jpg` to fully understand the model architecture.
+- Draw the detailed architecture diagram in `model_architecture.png`.
+- Implement the solution using codex (details can be found at `llm_logs/codex_log.md`).
+- Manually verify the results, make necessary adjustments. 
+- Push to github, and keep tracking the progress in the repo.
+- Ask Claude Code to double check and improve the solution. 
