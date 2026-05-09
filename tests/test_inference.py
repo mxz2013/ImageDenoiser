@@ -10,13 +10,18 @@ import torch
 from evaluation.compute_metrics import compute_pair_metrics, load_rgb_image
 from denoiser.model.denoise_model import load_model
 
+EXPECTED_PSNR = 33.316  # dB
+EXPECTED_SSIM = 0.808
+PSNR_TOL = 0.05  # dB — tolerates float rounding across platforms
+SSIM_TOL = 0.001
 
-def test_inference_improves_metrics_for_first_image() -> None:
+
+def test_inference_improves_metrics_for_first_image(project_root: Path) -> None:
     """Check that the denoiser improves PSNR and SSIM on ``00.png``."""
-    noisy_path = Path("images/noisy/00.png")
-    gt_path = Path("images/gt/00.png")
-    checkpoint_path = Path("checkpoint.pt")
-    weights_csv_path = Path("weights.csv")
+    noisy_path = project_root / "images/noisy/00.png"
+    gt_path = project_root / "images/gt/00.png"
+    checkpoint_path = project_root / "checkpoint.pt"
+    weights_csv_path = project_root / "weights.csv"
 
     model = load_model(checkpoint_path, weights_csv_path, device="cpu")
     noisy = load_rgb_image(noisy_path)
@@ -37,3 +42,11 @@ def test_inference_improves_metrics_for_first_image() -> None:
 
     assert denoised_psnr > noisy_psnr
     assert denoised_ssim > noisy_ssim
+    assert abs(denoised_ssim - EXPECTED_SSIM) <= SSIM_TOL, (
+        f"SSIM {denoised_ssim:.4f} deviates from expected {EXPECTED_SSIM:.4f} "
+        f"by more than {SSIM_TOL} — inference output has changed."
+    )
+    assert abs(denoised_psnr - EXPECTED_PSNR) <= PSNR_TOL, (
+        f"PSNR {denoised_psnr:.4f} dB deviates from expected {EXPECTED_PSNR:.4f} dB "
+        f"by more than {PSNR_TOL} dB — inference output has changed."
+    )
