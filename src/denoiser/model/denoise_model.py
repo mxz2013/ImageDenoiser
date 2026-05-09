@@ -12,7 +12,7 @@ from torch import Tensor, nn
 
 
 class ResidualBlock(nn.Module):
-    """Two-layer residual block used throughout the denoising network."""
+    """Two-layer residual block used throughout the denoising network. Input and output have the same shape."""
 
     def __init__(self, channels: int) -> None:
         """Initialize the residual block.
@@ -81,7 +81,9 @@ class PriorNet(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.Sequential(nn.PixelShuffle(2), nn.ReLU(inplace=True)),
+            nn.Sequential(
+                nn.PixelShuffle(2), nn.ReLU(inplace=True)
+            ),  # pixelshuffl -> espatial upsample by 2, channels reduced by 4 (2^2)
             ResidualBlock(out_channels),
             ResidualBlock(out_channels),
         )
@@ -107,19 +109,21 @@ class PriorNet(nn.Module):
         Returns:
             Denoised image batch with the same shape as ``x``.
         """
-        head = self.m_head(x)
+        head = self.m_head(x)  # bchw=b,32,512,512
 
-        down1 = self._run_down_stage(self.m_down1, head)
-        down2 = self._run_down_stage(self.m_down2, down1)
-        down3 = self._run_down_stage(self.m_down3, down2)
+        down1 = self._run_down_stage(self.m_down1, head)  # bchw=b,64,256,256
+        down2 = self._run_down_stage(self.m_down2, down1)  # bchw=b,128,128,128
+        down3 = self._run_down_stage(self.m_down3, down2)  # bchw=b,256,64,64
 
-        body = self.m_body(down3)
+        body = self.m_body(down3)  # bchw=b,256,64,64
 
-        up3 = self._run_up_stage(self.m_up3, body, down2)
-        up2 = self._run_up_stage(self.m_up2, up3, down1)
-        up1 = self._run_up_stage(self.m_up1, up2, head)
+        up3 = self._run_up_stage(self.m_up3, body, down2)  # bchw=b,128,128,128
+        up2 = self._run_up_stage(self.m_up2, up3, down1)  # bchw=b,64,256,256
+        up1 = self._run_up_stage(self.m_up1, up2, head)  # bchw=b,32,512,512
 
-        return x + self.m_tail(up1)
+        return (
+            x + self.m_tail(up1)
+        )  # add the input as a skip connecition, so the model ouputs a denoised image, instead of the noise itself.
 
 
 class _DenoiserContainer(nn.Module):
