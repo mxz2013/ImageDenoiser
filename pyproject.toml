@@ -1,0 +1,32 @@
+[project]
+name = "image-denoiser"
+version = "0.1.0"
+description = "Image denoising inference pipeline for the Enhance Lab technical assessment."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=7.2.0",
+    "matplotlib>=3.10.9",
+    "numpy>=2.4.4",
+    "pandas>=3.0.2",
+    "pillow>=12.2.0",
+    "scikit-image>=0.26.0",
+    "torch>=2.11.0",
+]
+
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/denoiser", "src/evaluation"]
+
+[tool.pyright]
+typeCheckingMode = "off"
