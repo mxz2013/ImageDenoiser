@@ -19,5 +19,6 @@ data_analysis/
 weights.csv
 checkpoint.pt
 outputs/
+supporting_document/
 .matplotlib-cache/
 .pytest_cache/
