@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 from pathlib import Path
 
@@ -10,6 +11,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
+
+logger = logging.getLogger(__name__)
 
 
 def load_rgb_image(path: str | Path) -> np.ndarray:
@@ -93,9 +96,9 @@ def compute_metrics(
     dataframe.to_csv(csv_path, index=False)
     plot_metrics(dataframe[dataframe["image"] != "AVERAGE"], plot_path)
 
-    print(dataframe.tail(1).to_string(index=False))
-    print(f"Saved metrics to {csv_path}")
-    print(f"Saved plot to {plot_path}")
+    logger.info(dataframe.tail(1).to_string(index=False))
+    logger.info("Saved metrics to %s", csv_path)
+    logger.info("Saved plot to %s", plot_path)
     return dataframe
 
 
@@ -139,6 +142,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     """CLI entrypoint."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     args = parse_args()
     compute_metrics(args.gt_dir, args.noisy_dir, args.denoised_dir, args.output_dir)
 

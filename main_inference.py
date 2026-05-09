@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
@@ -18,6 +19,8 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from denoiser.model.denoise_model import load_model  # noqa: E402
+
+logger = logging.getLogger(__name__)
 
 
 class ImageDenoisingDataset(Dataset[tuple[Tensor, str]]):
@@ -121,7 +124,7 @@ def run_inference(
                 output_path = output_dir / Path(name).with_suffix(".png").name
                 save_image_tensor(prediction, output_path)
                 saved_paths.append(output_path)
-                print(f"  {name} → {output_path}")
+                logger.info("  %s → %s", name, output_path)
 
     return saved_paths
 
@@ -140,6 +143,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     """CLI entrypoint."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     args = parse_args()
     saved_paths = run_inference(
         input_path=args.input,
@@ -149,7 +153,7 @@ def main() -> None:
         batch_size=args.batch_size,
         device=args.device,
     )
-    print(f"Saved {len(saved_paths)} denoised image(s) to {Path(args.output)}")
+    logger.info("Saved %d denoised image(s) to %s", len(saved_paths), Path(args.output))
 
 
 if __name__ == "__main__":
