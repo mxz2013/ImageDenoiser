@@ -151,4 +151,5 @@ input.
 - Implement the solution using codex (details can be found at `llm_logs/codex_log.md`).
 - Manually verify the results, make necessary adjustments. 
 - Push to github, and keep tracking the progress in the repo.
-- Ask Claude Code to double check and improve the solution. 
+- Ask Claude Code to double check and improve the solution (details can be found at `llm_logs/claude_code_log.md`). 
+- Final manual fine-tune before submission.
