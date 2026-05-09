@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import torch
 from torch import Tensor, nn
@@ -29,26 +30,6 @@ class ResidualBlock(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         """Apply the residual block."""
         return x + self.res(x)
-
-
-class PixelShuffleRelu(nn.Module):
-    """Pixel-shuffle upsampling followed by ReLU activation."""
-
-    def __init__(self, upscale_factor: int = 2) -> None:
-        """Initialize the pixel-shuffle block.
-
-        Args:
-            upscale_factor: Spatial upsampling factor.
-        """
-        super().__init__()
-        self.block = nn.Sequential(
-            nn.PixelShuffle(upscale_factor),
-            nn.ReLU(inplace=True),
-        )
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Upsample and activate a feature tensor."""
-        return self.block(x)
 
 
 class PriorNet(nn.Module):
@@ -100,7 +81,7 @@ class PriorNet(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            PixelShuffleRelu(2),
+            nn.Sequential(nn.PixelShuffle(2), nn.ReLU(inplace=True)),
             ResidualBlock(out_channels),
             ResidualBlock(out_channels),
         )
@@ -108,16 +89,14 @@ class PriorNet(nn.Module):
     @staticmethod
     def _run_down_stage(stage: nn.Sequential, x: Tensor) -> Tensor:
         """Run an encoder stage and return the post-convolution skip tensor."""
-        features = stage[0](x)
-        features = stage[1](features)
-        return stage[2](features)
+        res1, res2, downsample = stage  # mirrors _make_down_stage order
+        return downsample(res2(res1(x)))
 
     @staticmethod
     def _run_up_stage(stage: nn.Sequential, x: Tensor, skip: Tensor) -> Tensor:
         """Run a decoder stage and add the matching encoder skip tensor."""
-        upsampled = stage[1](stage[0](x))
-        upsampled = stage[2](upsampled)
-        return stage[3](upsampled) + skip
+        conv, upsample, res1, res2 = stage  # mirrors _make_up_stage order
+        return res2(res1(upsample(conv(x)))) + skip
 
     def forward(self, x: Tensor) -> Tensor:
         """Run the denoising network.
@@ -247,8 +226,10 @@ def convert_weights_csv_to_checkpoint(
 
         ordered = group.sort_values("index")
         index_values = ordered["index"].to_numpy()
-        if index_values[0] != 0 or index_values[-1] != expected_count - 1:
-            raise ValueError(f"{name} indices must cover 0..{expected_count - 1}.")
+        if not np.array_equal(index_values, np.arange(expected_count)):
+            raise ValueError(
+                f"{name} indices must be exactly 0..{expected_count - 1} with no gaps or duplicates."
+            )
 
         out_channels, in_channels, kernel_height, kernel_width = target_shape
         csv_shape = (in_channels, out_channels, kernel_height, kernel_width)
@@ -299,7 +280,7 @@ def load_model(
             )
         convert_weights_csv_to_checkpoint(weights_csv_path, checkpoint_path, model)
 
-    payload = torch.load(checkpoint_path, map_location="cpu")
+    payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     state_dict = _checkpoint_state_dict(payload)
     model.load_state_dict(state_dict, strict=True)
     model.to(device)

@@ -11,10 +11,6 @@ import pandas as pd
 from PIL import Image
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 
-os.environ.setdefault("MPLCONFIGDIR", str(Path(".matplotlib-cache").resolve()))
-
-import matplotlib.pyplot as plt  # noqa: E402
-
 
 def load_rgb_image(path: str | Path) -> np.ndarray:
     """Load an RGB image as a float array in ``[0, 1]``."""
@@ -105,6 +101,9 @@ def compute_metrics(
 
 def plot_metrics(dataframe: pd.DataFrame, output_path: str | Path) -> None:
     """Save a PSNR/SSIM comparison plot."""
+    os.environ.setdefault("MPLCONFIGDIR", str(Path(".matplotlib-cache").resolve()))
+    import matplotlib.pyplot as plt
+
     output_path = Path(output_path)
     fig, axes = plt.subplots(1, 2, figsize=(12, 4), constrained_layout=True)
 
