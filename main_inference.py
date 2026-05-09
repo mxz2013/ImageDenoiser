@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -13,12 +12,7 @@ from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 
-ROOT = Path(__file__).resolve().parent
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-
-from denoiser.model.denoise_model import load_model  # noqa: E402
+from denoiser.model.denoise_model import load_model
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +99,9 @@ def run_inference(
     if batch_size < 1:
         raise ValueError("batch_size must be >= 1")
 
-    selected_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
+    selected_device = torch.device(
+        device or ("cuda" if torch.cuda.is_available() else "cpu")
+    )
     model = load_model(checkpoint_path, weights_csv_path, selected_device)
     dataset = ImageDenoisingDataset(input_path)
     dataloader = DataLoader(
@@ -132,12 +128,24 @@ def run_inference(
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Run denoising inference.")
-    parser.add_argument("--input", default="images/noisy", help="Image file or directory to denoise.")
-    parser.add_argument("--output", default="outputs/denoised", help="Directory for denoised outputs.")
-    parser.add_argument("--checkpoint", default="checkpoint.pt", help="Path to checkpoint.pt.")
-    parser.add_argument("--weights-csv", default="weights.csv", help="Path to weights.csv.")
-    parser.add_argument("--batch-size", type=int, default=1, help="Inference batch size.")
-    parser.add_argument("--device", default=None, help="Torch device, for example 'cpu' or 'cuda'.")
+    parser.add_argument(
+        "--input", default="images/noisy", help="Image file or directory to denoise."
+    )
+    parser.add_argument(
+        "--output", default="outputs/denoised", help="Directory for denoised outputs."
+    )
+    parser.add_argument(
+        "--checkpoint", default="checkpoint.pt", help="Path to checkpoint.pt."
+    )
+    parser.add_argument(
+        "--weights-csv", default="weights.csv", help="Path to weights.csv."
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=1, help="Inference batch size."
+    )
+    parser.add_argument(
+        "--device", default=None, help="Torch device, for example 'cpu' or 'cuda'."
+    )
     return parser.parse_args()
 
 
