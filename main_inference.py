@@ -59,6 +59,11 @@ class ImageDenoisingDataset(Dataset[tuple[Tensor, str]]):
         """Load an image as a normalized ``CHW`` float tensor."""
         image_path = self.image_paths[index]
         image = Image.open(image_path).convert("RGB")
+        w, h = image.size
+        if h % 8 != 0 or w % 8 != 0:
+            raise ValueError(
+                f"{image_path.name}: dimensions {w}×{h} must both be divisible by 8."
+            )
         array = np.asarray(image, dtype=np.float32) / 255.0
         tensor = torch.from_numpy(array).permute(2, 0, 1).contiguous()
         return tensor, image_path.name
@@ -100,7 +105,12 @@ def run_inference(
     selected_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     model = load_model(checkpoint_path, weights_csv_path, selected_device)
     dataset = ImageDenoisingDataset(input_path)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        pin_memory=selected_device.type == "cuda",
+    )
 
     output_dir = Path(output_dir)
     saved_paths: list[Path] = []
@@ -111,6 +121,7 @@ def run_inference(
                 output_path = output_dir / Path(name).with_suffix(".png").name
                 save_image_tensor(prediction, output_path)
                 saved_paths.append(output_path)
+                print(f"  {name} → {output_path}")
 
     return saved_paths
 
