@@ -22,6 +22,7 @@ results with PSNR and SSIM.
 │   ├── codex_log.md        # Conversation log with Codex
 │   └── cc_log.md           # Conversation log with Claude Code
 ├── architecture.jpg        # Original network diagram
+├── checkpoint.pt           # Converted from weights.csv (for testing the solution). 
 ├── model_architecture.png  # Interpreted architecture diagram
 ├── performance_check.png   # Denoising example image
 ├── prompt.md               # Initial prompt for Codex
@@ -31,7 +32,6 @@ results with PSNR and SSIM.
 Files that are intentionally ignored in github:
 
 - `weights.csv`: large assessment-provided weight file.
-- `checkpoint.pt`: converted PyTorch checkpoint created from `weights.csv`.
 - `outputs/`: denoised images, metrics CSV, and metrics plot.
 
 ## Setup

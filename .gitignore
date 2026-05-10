@@ -17,7 +17,7 @@ data_analysis/
 .vscode/
 
 weights.csv
-checkpoint.pt
+# checkpoint.pt
 outputs/
 supporting_document/
 .matplotlib-cache/
