@@ -91,13 +91,15 @@ class PriorNet(nn.Module):
     @staticmethod
     def _run_down_stage(stage: nn.Sequential, x: Tensor) -> Tensor:
         """Run an encoder stage and return the post-convolution skip tensor."""
-        res1, res2, downsample = stage  # mirrors _make_down_stage order
+        res1, res2, downsample = stage  # same order as defined in _make_down_stage
         return downsample(res2(res1(x)))
 
     @staticmethod
     def _run_up_stage(stage: nn.Sequential, x: Tensor, skip: Tensor) -> Tensor:
         """Run a decoder stage and add the matching encoder skip tensor."""
-        conv, upsample, res1, res2 = stage  # mirrors _make_up_stage order
+        conv, upsample, res1, res2 = (
+            stage  # same order as defined in _make_up_stage order
+        )
         return res2(res1(upsample(conv(x)))) + skip
 
     def forward(self, x: Tensor) -> Tensor:
