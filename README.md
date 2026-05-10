@@ -127,7 +127,7 @@ metrics:
 
 ![Denoising performance comparison](performance_check.png)
 
-![Denoising Merics](outputs/metrics/metrics.png)
+![Denoising Metrics](outputs/metrics/metrics.png)
 
 ## Tests
 
@@ -155,5 +155,5 @@ input.
 - Implement the solution using codex (details can be found at `llm_logs/codex_log.md`).
 - Manually verify the results, make necessary adjustments. 
 - Push to github, and keep tracking the progress in the repo.
-- Ask Claude Code to double check and improve the solution (details can be found at `llm_logs/claude_code_log.md`). 
+- Ask Claude Code to double check and improve the solution (details can be found at `llm_logs/cc_log.md`). 
 - Final manual fine-tune before submission.

@@ -27,7 +27,7 @@ class ResidualBlock(nn.Module):
             ),  # prior_net.m_downN.res.0 where N=1.0, 1.1, 2.0, 2.1, 3.0, 3.1
             nn.ReLU(
                 inplace=True
-            ),  # the 1th layer is ReLU, which is not included in the checkpoint, so we don't need to assign it a name.
+            ),  # ReLU is not included in the checkpoint, so no weight name is needed.
             nn.Conv2d(
                 channels, channels, kernel_size=3, padding=1, bias=False
             ),  # prior_net.m_downN.res.2 where N=1.0, 1.1, 2.0, 2.1, 3.0, 3.1
@@ -69,10 +69,10 @@ class PriorNet(nn.Module):
         return nn.Sequential(
             ResidualBlock(
                 in_channels
-            ),  # proior_net.m_downN.res.0 and proior_net.m_downN.res.2 and where N=1.0, 2.0, 3.0
+            ),  # prior_net.m_downN.res.0 and prior_net.m_downN.res.2 where N=1.0, 2.0, 3.0
             ResidualBlock(
                 in_channels
-            ),  # proior_net.m_downM.res.0 and proior_net.m_downM.res.2 and where M=1.1, 2.1, 3.1
+            ),  # prior_net.m_downM.res.0 and prior_net.m_downM.res.2 where M=1.1, 2.1, 3.1
             nn.Conv2d(
                 in_channels,
                 out_channels,
@@ -95,7 +95,7 @@ class PriorNet(nn.Module):
             ),  # prior_net.m_upN.0 where N=1,2,3
             nn.Sequential(
                 nn.PixelShuffle(2), nn.ReLU(inplace=True)
-            ),  # pixelshuffl -> espatial upsample by 2, channels reduced by 4 (2^2)
+            ),  # PixelShuffle upsamples spatially by 2 and reduces channels by 4.
             ResidualBlock(
                 out_channels
             ),  # prior_net.m_upN.2.res.0 and prior_net.m_upN.2.res.2 where N=1,2,3
@@ -141,7 +141,7 @@ class PriorNet(nn.Module):
 
         return (
             x + self.m_tail(up1)
-        )  # add the input as a skip connecition, so the model ouputs a denoised image, instead of the noise itself.
+        )  # Add the input skip so the model outputs a denoised image.
 
 
 class _DenoiserContainer(nn.Module):
