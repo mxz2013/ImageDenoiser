@@ -22,9 +22,15 @@ class ResidualBlock(nn.Module):
         """
         super().__init__()
         self.res = nn.Sequential(
-            nn.Conv2d(channels, channels, kernel_size=3, padding=1, bias=False),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(channels, channels, kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(
+                channels, channels, kernel_size=3, padding=1, bias=False
+            ),  # prior_net.m_downN.res.0 where N=1.0, 1.1, 2.0, 2.1, 3.0, 3.1
+            nn.ReLU(
+                inplace=True
+            ),  # the 1th layer is ReLU, which is not included in the checkpoint, so we don't need to assign it a name.
+            nn.Conv2d(
+                channels, channels, kernel_size=3, padding=1, bias=False
+            ),  # prior_net.m_downN.res.2 where N=1.0, 1.1, 2.0, 2.1, 3.0, 3.1
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -38,20 +44,22 @@ class PriorNet(nn.Module):
     def __init__(self) -> None:
         """Initialize the architecture with names matching ``weights.csv``."""
         super().__init__()
-        self.m_head = nn.Conv2d(3, 32, kernel_size=3, padding=1, bias=False)
+        self.m_head = nn.Conv2d(
+            3, 32, kernel_size=3, padding=1, bias=False
+        )  # prior_net.m_head
 
-        self.m_down1 = self._make_down_stage(32, 64)
-        self.m_down2 = self._make_down_stage(64, 128)
-        self.m_down3 = self._make_down_stage(128, 256)
+        self.m_down1 = self._make_down_stage(32, 64)  # prior_net.m_down1.x
+        self.m_down2 = self._make_down_stage(64, 128)  # prior_net.m_down2.x
+        self.m_down3 = self._make_down_stage(128, 256)  # prior_net.m_down3.x
 
         self.m_body = nn.Sequential(
-            ResidualBlock(256),
-            ResidualBlock(256),
-        )
+            ResidualBlock(256),  # prior_net.m_body.0.res.0, prior_net.m_body.0.res.2
+            ResidualBlock(256),  # prior_net.m_body.1.res.0, prior_net.m_body.1.res.2
+        )  #
 
-        self.m_up3 = self._make_up_stage(256, 128)
-        self.m_up2 = self._make_up_stage(128, 64)
-        self.m_up1 = self._make_up_stage(64, 32)
+        self.m_up3 = self._make_up_stage(256, 128)  # prior_net.m_up3.x
+        self.m_up2 = self._make_up_stage(128, 64)  # prior_net.m_up2.x
+        self.m_up1 = self._make_up_stage(64, 32)  # prior_net.m_up1.x
 
         self.m_tail = nn.Conv2d(32, 3, kernel_size=3, padding=1, bias=False)
 
@@ -59,15 +67,19 @@ class PriorNet(nn.Module):
     def _make_down_stage(in_channels: int, out_channels: int) -> nn.Sequential:
         """Create one encoder stage: two residual blocks then downsample."""
         return nn.Sequential(
-            ResidualBlock(in_channels),
-            ResidualBlock(in_channels),
+            ResidualBlock(
+                in_channels
+            ),  # proior_net.m_downN.res.0 and proior_net.m_downN.res.2 and where N=1.0, 2.0, 3.0
+            ResidualBlock(
+                in_channels
+            ),  # proior_net.m_downM.res.0 and proior_net.m_downM.res.2 and where M=1.1, 2.1, 3.1
             nn.Conv2d(
                 in_channels,
                 out_channels,
                 kernel_size=2,
                 stride=2,
                 bias=False,
-            ),
+            ),  # prior_net.m_downX where X = 1.2, 2.2, 3.2
         )
 
     @staticmethod
@@ -80,12 +92,16 @@ class PriorNet(nn.Module):
                 kernel_size=3,
                 padding=1,
                 bias=False,
-            ),
+            ),  # prior_net.m_upN.0 where N=1,2,3
             nn.Sequential(
                 nn.PixelShuffle(2), nn.ReLU(inplace=True)
             ),  # pixelshuffl -> espatial upsample by 2, channels reduced by 4 (2^2)
-            ResidualBlock(out_channels),
-            ResidualBlock(out_channels),
+            ResidualBlock(
+                out_channels
+            ),  # prior_net.m_upN.2.res.0 and prior_net.m_upN.2.res.2 where N=1,2,3
+            ResidualBlock(
+                out_channels
+            ),  # prior_net.m_upN.3.res.0  and prior_net.m_upN.3.res.2 where N=1,2,3
         )
 
     @staticmethod
