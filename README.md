@@ -21,6 +21,9 @@ results with PSNR and SSIM.
 ├── llm_logs/
 │   ├── codex_log.md        # Conversation log with Codex
 │   └── cc_log.md           # Conversation log with Claude Code
+├── outputs/
+│   ├── denoised/           # Denoised RGB images
+│   └── metrics/            # Metrics about image quality 
 ├── architecture.jpg        # Original network diagram
 ├── checkpoint.pt           # Converted from weights.csv (for testing the solution). 
 ├── model_architecture.png  # Interpreted architecture diagram
@@ -32,7 +35,6 @@ results with PSNR and SSIM.
 Files that are intentionally ignored in github:
 
 - `weights.csv`: large assessment-provided weight file.
-- `outputs/`: denoised images, metrics CSV, and metrics plot.
 
 ## Setup
 
@@ -121,9 +123,11 @@ metrics:
 | PSNR | 28.2345 | 32.8445 | +4.6099 dB |
 | SSIM | 0.5397 | 0.8146 | +0.2749 |
 
-## Denoise Examples
+## Denoise Results 
 
 ![Denoising performance comparison](performance_check.png)
+
+![Denoising Merics](outputs/metrics/metrics.png)
 
 ## Tests
 
