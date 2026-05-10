@@ -21,7 +21,9 @@ def load_rgb_image(path: str | Path) -> np.ndarray:
     return np.asarray(image, dtype=np.float32) / 255.0
 
 
-def compute_pair_metrics(reference: np.ndarray, candidate: np.ndarray) -> tuple[float, float]:
+def compute_pair_metrics(
+    reference: np.ndarray, candidate: np.ndarray
+) -> tuple[float, float]:
     """Compute PSNR and SSIM between two RGB images."""
     if reference.shape != candidate.shape:
         raise ValueError(f"Shape mismatch: {reference.shape} != {candidate.shape}")
@@ -58,9 +60,13 @@ def compute_metrics(
         noisy_path = noisy_dir / gt_path.name
         denoised_path = denoised_dir / gt_path.name
         if not noisy_path.exists():
-            raise FileNotFoundError(f"Missing noisy image for {gt_path.name}: {noisy_path}")
+            raise FileNotFoundError(
+                f"Missing noisy image for {gt_path.name}: {noisy_path}"
+            )
         if not denoised_path.exists():
-            raise FileNotFoundError(f"Missing denoised image for {gt_path.name}: {denoised_path}")
+            raise FileNotFoundError(
+                f"Missing denoised image for {gt_path.name}: {denoised_path}"
+            )
 
         gt = load_rgb_image(gt_path)
         noisy = load_rgb_image(noisy_path)
@@ -104,7 +110,6 @@ def compute_metrics(
 
 def plot_metrics(dataframe: pd.DataFrame, output_path: str | Path) -> None:
     """Save a PSNR/SSIM comparison plot."""
-    os.environ.setdefault("MPLCONFIGDIR", str(Path(".matplotlib-cache").resolve()))
     import matplotlib.pyplot as plt
 
     output_path = Path(output_path)
@@ -132,11 +137,21 @@ def plot_metrics(dataframe: pd.DataFrame, output_path: str | Path) -> None:
 
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Compute denoising PSNR and SSIM metrics.")
-    parser.add_argument("--gt-dir", default="images/gt", help="Ground-truth image directory.")
-    parser.add_argument("--noisy-dir", default="images/noisy", help="Noisy image directory.")
-    parser.add_argument("--denoised-dir", default="outputs/denoised", help="Denoised output directory.")
-    parser.add_argument("--output-dir", default="outputs/metrics", help="Metrics output directory.")
+    parser = argparse.ArgumentParser(
+        description="Compute denoising PSNR and SSIM metrics."
+    )
+    parser.add_argument(
+        "--gt-dir", default="images/gt", help="Ground-truth image directory."
+    )
+    parser.add_argument(
+        "--noisy-dir", default="images/noisy", help="Noisy image directory."
+    )
+    parser.add_argument(
+        "--denoised-dir", default="outputs/denoised", help="Denoised output directory."
+    )
+    parser.add_argument(
+        "--output-dir", default="outputs/metrics", help="Metrics output directory."
+    )
     return parser.parse_args()
 
 
