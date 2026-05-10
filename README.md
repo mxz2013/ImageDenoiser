@@ -94,8 +94,9 @@ uv run python main_inference.py \
   --input images/noisy/00.png \
   --output outputs/denoised \
   --checkpoint checkpoint.pt \
-  --weights-csv weights.csv
+  --weights-csv weights.csv  
 ```
+ The `--weights-csv weights.csv ` argument is useful when checkpoint.pt is not present, but weights.csv is present to verify the converting function.  
 
 ## Compute Metrics
 
@@ -152,7 +153,7 @@ input.
 - Read carefully `CandidateInstructions.md` to understand objectives.
 - Data analysis on `weights.csv` together with `architecture.jpg` to fully understand the model architecture.
 - Draw the detailed architecture diagram in `model_architecture.png`.
-- Implement the solution using codex (details can be found at `llm_logs/codex_log.md`).
+- Implement the solution using codex with an initial prompt in `prompt.md` (details can be found at `llm_logs/codex_log.md`).
 - Manually verify the results, make necessary adjustments. 
 - Push to github, and keep tracking the progress in the repo.
 - Ask Claude Code to double check and improve the solution (details can be found at `llm_logs/cc_log.md`). 
