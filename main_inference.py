@@ -81,6 +81,7 @@ def run_inference(
     checkpoint_path: str | Path = "checkpoint.pt",
     weights_csv_path: str | Path | None = "weights.csv",
     batch_size: int = 1,
+    n_workers: int = 0,
     device: str | torch.device | None = None,
 ) -> list[Path]:
     """Denoise images and save outputs.
@@ -91,6 +92,7 @@ def run_inference(
         checkpoint_path: Path to converted PyTorch checkpoint.
         weights_csv_path: CSV path used to create the checkpoint if missing.
         batch_size: Number of images per inference batch.
+        n_workers: Number of DataLoader worker processes (0 = main process only).
         device: Torch device. Defaults to CUDA when available, otherwise CPU.
 
     Returns:
@@ -108,6 +110,7 @@ def run_inference(
         dataset,
         batch_size=batch_size,
         shuffle=False,
+        num_workers=n_workers,
         pin_memory=selected_device.type == "cuda",
     )
 
@@ -144,6 +147,9 @@ def parse_args() -> argparse.Namespace:
         "--batch-size", type=int, default=1, help="Inference batch size."
     )
     parser.add_argument(
+        "--n-workers", type=int, default=0, help="Number of DataLoader worker processes."
+    )
+    parser.add_argument(
         "--device", default=None, help="Torch device, for example 'cpu' or 'cuda'."
     )
     return parser.parse_args()
@@ -159,6 +165,7 @@ def main() -> None:
         checkpoint_path=args.checkpoint,
         weights_csv_path=args.weights_csv,
         batch_size=args.batch_size,
+        n_workers=args.n_workers,
         device=args.device,
     )
     logger.info("Saved %d denoised image(s) to %s", len(saved_paths), Path(args.output))
