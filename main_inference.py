@@ -60,9 +60,18 @@ class ImageDenoisingDataset(Dataset[tuple[Tensor, str]]):
         if h % 8 != 0 or w % 8 != 0:
             raise ValueError(
                 f"{image_path.name}: dimensions {w}×{h} must both be divisible by 8."
-            )
-        array = np.asarray(image, dtype=np.float32) / 255.0
+            )  # 3 downsamplings stages, 512 -> 64
+        array = (
+            np.asarray(image, dtype=np.float32) / 255.0
+        )  # convert uint8 to float32 and norm to [0.0, 1.0]
         tensor = torch.from_numpy(array).permute(2, 0, 1).contiguous()
+        # in general torch model uses troch.float32, but if not we do
+        # PIL image / uint8
+        # -> NumPy float32 normalized to [0, 1]
+        # -> Torch tensor
+        # -> move/cast to model device and dtype
+        # model_dtype = next(model.parameters()).dtype
+        # tensor = tensor.to(device=device, dtype=model_dtype)
         return tensor, image_path.name
 
 
@@ -118,7 +127,9 @@ def run_inference(
     saved_paths: list[Path] = []
     with torch.no_grad():
         for noisy_batch, names in dataloader:
-            predictions = model(noisy_batch.to(selected_device)).clamp(0.0, 1.0)
+            predictions = model(noisy_batch.to(selected_device)).clamp(
+                0.0, 1.0
+            )  # the values can go out of range after denoising
             for prediction, name in zip(predictions, names, strict=True):
                 output_path = output_dir / Path(name).with_suffix(".png").name
                 save_image_tensor(prediction, output_path)
@@ -147,7 +158,10 @@ def parse_args() -> argparse.Namespace:
         "--batch-size", type=int, default=1, help="Inference batch size."
     )
     parser.add_argument(
-        "--n-workers", type=int, default=0, help="Number of DataLoader worker processes."
+        "--n-workers",
+        type=int,
+        default=0,
+        help="Number of DataLoader worker processes.",
     )
     parser.add_argument(
         "--device", default=None, help="Torch device, for example 'cpu' or 'cuda'."

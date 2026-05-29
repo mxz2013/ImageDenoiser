@@ -139,8 +139,8 @@ class PriorNet(nn.Module):
         up2 = self._run_up_stage(self.m_up2, up3, down1)  # bchw=b,64,256,256
         up1 = self._run_up_stage(self.m_up1, up2, head)  # bchw=b,32,512,512
 
-        return (
-            x + self.m_tail(up1)
+        return x + self.m_tail(
+            up1
         )  # Add the input skip so the model outputs a denoised image.
 
 
@@ -163,7 +163,11 @@ class DenoiseModel(nn.Module):
     def __init__(self) -> None:
         """Initialize the denoising model."""
         super().__init__()
-        self.model = _DenoiserContainer()
+        self.model = _DenoiserContainer()  # since the layer name is model.prior_net.xxx
+        # we define here model, then in _DenoiserContainer, we defind prior_net
+        # An alternative way is
+        # self.model = nn.Module()
+        # self.model.prior_net = PriorNet()
 
     def forward(self, x: Tensor) -> Tensor:
         """Apply image denoising."""
@@ -234,14 +238,16 @@ def convert_weights_csv_to_checkpoint(
     converted: dict[str, Tensor] = {}
     for layer_name, group in weights.groupby("layer_name", observed=True):
         name = str(layer_name)
-        target_shape = tuple(expected[name].shape)
+        target_shape = tuple(
+            expected[name].shape
+        )  # converting torch.Size object to a python tuple
         if len(target_shape) != 4:
             raise ValueError(
                 f"Only 4D convolution weights are supported, got {name}: {target_shape}"
             )
 
         expected_count = expected[name].numel()
-        if len(group) != expected_count:
+        if len(group) != expected_count:  # the number of weights has to be =
             raise ValueError(
                 f"{name} has {len(group)} values, expected {expected_count}."
             )
@@ -256,8 +262,10 @@ def convert_weights_csv_to_checkpoint(
         out_channels, in_channels, kernel_height, kernel_width = target_shape
         csv_shape = (in_channels, out_channels, kernel_height, kernel_width)
         tensor = (
-            torch.from_numpy(ordered["value"].to_numpy(copy=True))
-            .reshape(csv_shape)
+            torch.from_numpy(
+                ordered["value"].to_numpy(copy=True)
+            )  # copy so we have a fresh, contiguous Numpy array
+            .reshape(csv_shape)  # csv dim order
             .permute(1, 0, 2, 3)  # convert to PyTorch's expected layout
             .contiguous()
         )
@@ -308,3 +316,12 @@ def load_model(
     model.to(device)
     model.eval()
     return model
+
+
+if __name__ == "__main__":
+    csv_path = Path("weights.csv")
+    checkpoint_path = Path("checkpoint_test.pt")
+    model = DenoiseModel()
+    convert_weights_csv_to_checkpoint(
+        csv_path=csv_path, checkpoint_path=checkpoint_path, model=model
+    )
